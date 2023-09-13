@@ -1,44 +1,188 @@
 # Documentação da API do Aplicativo Mia
 
-Essa documentação serve como um guia para a API do Aplicativo Mia. A API é responsável pelo gerenciamento de Usuários, Tarefas e a interação com APIs externas como OpenAI e Figma para a geração de tarefas personalizadas.
+Esta API foi criada para auxiliar no processo de lógica do aplicativo Mia. A API gerencia Usuários e Tarefas, permitindo a criação, atualização, exclusão e recuperação de informações relacionadas a essas entidades.
 
-## Funcionamento da API
+Nosso sistema interage com duas APIs externas: OpenAI e Figma, para criar tarefas detalhadas e personalizadas. A API da OpenAI produz o contexto e a sequência de passos da tarefa, identificando quais interfaces foram usadas. Os nomes dessas interfaces são capturados e enviados à API do Figma. Depois, nosso sistema verifica se já existe um arquivo Figma relacionado em nosso banco de dados. Caso exista, percorre todas as interfaces e armazena aquelas usadas na explicação da OpenAI em uma lista. A seguir, faz uma nova requisição ao Figma para obter as imagens dessas interfaces. Por fim, as informações obtidas de ambas as APIs são organizadas pela nossa API que retorna uma resposta formatada com as imagens das interfaces, seus nomes, o texto explicativo da tarefa e as imagens correspondentes a cada passo, visíveis nos nomes entre parênteses no fim de cada frase de cada passo. Realizamos uma requisição do tipo ```POST /ask``` para a API da Mia para executar todo este processo.
 
-A API do Aplicativo Mia interage com as APIs da OpenAI e Figma para criar tarefas detalhadas e personalizadas. Inicialmente, a OpenAI produz o contexto e a sequência de passos da tarefa, identificando as interfaces que foram utilizadas. Os nomes dessas interfaces são capturados e enviados à API do Figma. Em seguida, nosso sistema verifica se existe um arquivo Figma relacionado em nosso banco de dados. Se existir, ele percorre todas as interfaces e armazena aquelas usadas na explicação da OpenAI em uma lista. Posteriormente, faz uma nova requisição ao Figma para obter as imagens dessas interfaces. Finalmente, as informações obtidas de ambas as APIs são organizadas pela nossa API, que retorna uma resposta formatada com as imagens das interfaces, seus nomes, o texto explicativo da tarefa e as imagens correspondentes a cada passo. Este processo é iniciado com uma requisição do tipo `POST /ask` à API da Mia.
+## Pré-requisitos
 
-## Configurações da API
+Antes de começar a utilizar esta API, certifique-se de que você tenha os seguintes pré-requisitos instalados:
 
-A API tem uma série de configurações que permitem personalizar seu comportamento e integração com o banco de dados, servidor e outras APIs.
+- Java JDK ([Link para download](https://www.oracle.com/java/technologies/javase-downloads.html))
 
-### Configurações do Spring JPA
+## Configuração
 
-- `spring.jpa.database`: Define o banco de dados usado pelo Spring JPA. Neste caso, é o PostgreSQL.
-- `spring.jpa.database-platform`: Define o dialeto do PostgreSQL para o Hibernate.
-- `spring.jpa.show-sql`: Habilita a exibição das consultas SQL executadas pelo Spring JPA.
-- `spring.jpa.hibernate.ddl-auto`: Configura o comportamento do Hibernate para criação e descarte do esquema do banco de dados.
+Siga estas etapas para configurar e executar a API em sua máquina:
 
-### Configurações do Banco de Dados
+1. Clone este repositório:
 
-- `spring.database.driverClassName`: Define a classe do driver JDBC para o PostgreSQL.
-- `spring.datasource.url`: Define a URL do banco de dados PostgreSQL, com o nome do banco de dados miadb.
-- `spring.datasource.username`: Define o nome de usuário para acessar o banco de dados.
-- `spring.datasource.password`: Define a senha para acessar o banco de dados.
+   ```shell
+   git clone https://github.com/luizroddev/Mia-Sprint3.git
+   ```
 
-### Configurações do Servidor
+2. Navegue até o diretório do projeto:
 
-- `server.port`: Define a porta em que o servidor será executado (8080 neste caso).
+   ```shell
+   cd Mia-Sprint3
+   ```
 
-### Configuração do SQL Init
+3. Execute a aplicação Spring Boot:
 
-- `spring.sql.init.mode`: Define o modo de inicialização do SQL, onde 'always' indica que as instruções SQL serão sempre executadas.
+   ```shell
+   ./mvnw spring-boot:run
+   ```
 
-### Configurações da API OpenAI
+   A API estará disponível em [localhost:8080].
 
-- `openai.api.key`: Insira aqui a chave da API da OpenAI. Certifique-se de substituir "YOUR_OPENAI_KEY_HERE" pela sua chave real.
+## Siga essa sequência de passos para testar a API
 
-### Configurações da API Figma
+Por exemplo:
 
-- `figma.api.key`: Define a chave de autenticação para a API do Figma. (OBS: Já está uma KEY colocada no projeto, para caso queira testar, use o exemplo da pergunta "Como trocar meu número do Whatsapp", e passe o nome do aplicativo como "Whatsapp")
+- **Criar um novo usuário**:
+
+  ```shell
+  POST /users
+  {
+	"name": "Luiz",
+	"email": "luiz@gmail.com",
+	"password": "senha123"
+  }
+  ```
+
+- **Autenticar esse usuário para pegarmos o token JWT**:
+
+  ```shell
+  POST /users/login
+  {
+	"email": "luiz@gmail.com",
+	"password": "senha123"
+  }
+  ```
+
+  ***Exemplo de resposta***
+  ```
+  {
+	"id": 1,
+	"email": "luiz@gmail.com",
+	"name": "Luiz",
+	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsdWl6QGdtYWlsLmNvbSIsImlzcyI6Ik1pYSIsImV4cCI6MTY5NDU0NzYyMn0.Tx4NFZ1Z9SAtdPHxR4923RRD-EUPPn_xXWq7HoHK_HQ"
+  }
+  ```
+
+  ## Capture esse Token e utilize como headers nas próximas requisições, como Bearer
+  ``` {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsdWl6QGdtYWlsLmNvbSIsImlzcyI6Ik1pYSIsImV4cCI6MTY5NDU0NzYyMn0.Tx4NFZ1Z9SAtdPHxR4923RRD-EUPPn_xXWq7HoHK_HQ'```
+
+
+
+- **Criar um chat de conversa**:
+
+  ```shell
+  POST /tasks
+  ```
+  ```
+  {
+  "title": "Nome da conversa", //Normalmente, primeira pergunta feita pelo usuário
+  "createdAt": "2023-09-11T01:35:18.758Z",
+  "application": {
+    "id": 1 // Pode usar o ID 1, está pre-configurado no nosso banco de dados para facilitar testes com a API do Figma
+  },
+  "user": {
+    "id": 1 // ID do usuário
+  },
+	"steps": [] //Uma lista vazia de mensagens
+  }
+  ```
+
+- **Fazer a requisição para Mia analisar o pedido junto a IA da OpenAI e aos arquivos da API do Figma**:
+
+  ```shell
+  POST /ask
+  ```
+  ```
+  {
+	"app": "Whatsapp", //Whatsapp, pois é o que já está configurado com nossa APi do Figma
+	"text": "Como alterar meu número no Whatsapp?",
+	"userId": 1, //ID do usuário perguntando
+	"taskId": 1 //ID do chat de conversa
+  }
+  ```
+
+  ***Exemplo de resposta***
+  ```
+  {
+	"steps": {
+		"appName": "whatsapp",
+		"question": "como trocar minha foto de perfil do whatsapp",
+		"steps": {
+			"Clique no botão de Menu da tela Principal": [
+				"Whatsapp-Principal_Menu"
+			],
+			"Clique na opção Configurações no Menu e depois clique na opção Perfil na tela de Configurações": [
+				"Whatsapp-Menu_Configuracoes",
+				"Whatsapp-Configuracoes_Perfil"
+			],
+			"Na tela de Perfil, clique no botão Editar Foto": [
+				"Whatsapp-Perfil_EditarFoto"
+			]
+		},
+		"screens": [
+			"Whatsapp-Principal_Menu",
+			"Whatsapp-Menu_Configuracoes",
+			"Whatsapp-Configuracoes_Perfil",
+			"Whatsapp-Perfil_EditarFoto"
+		],
+		"elements": [
+			"Whatsapp-Principal_Menu",
+			"Whatsapp-Menu_Configuracoes",
+			"Whatsapp-Configuracoes_Perfil",
+			"Whatsapp-Perfil_EditarFoto"
+		]
+	},
+	"images": {
+		"screens": {
+			"err": null,
+			"images": {
+				"29:33": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/e3fa8d44-7fef-4124-bc29-1f29b6711b97",
+				"143:2": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/6fc984e5-72a8-42bd-8219-06acef5a01b5",
+				"48:65": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/d9044fdd-0497-44cf-bf32-35a60e26774c"
+			}
+		}
+  ```
+
+- **Adicionar mensagens e imagens anexadas ao banco de dados**:
+
+  ```shell
+  POST /step
+  {
+	"description": "Texto da mensagem",
+	"imageUrl": "https://urlDaImagem.com",
+	"task": {
+		"id": 1 //ID do chat de conversa
+  }
+  ```
+
+## Contribuição
+
+Se você deseja contribuir para este projeto, siga estas etapas:
+
+1. Fork o repositório.
+2. Crie uma nova branch com a sua feature: `git checkout -b minha-feature`.
+3. Faça commit das suas alterações: `git commit -m 'Adicionei uma nova feature'`.
+4. Envie as alterações para a sua branch: `git push origin minha-feature`.
+5. Abra um Pull Request no repositório original.
+
+## Licença
+
+Este projeto está licenciado sob a Licença [Nome da Licença]. Consulte o arquivo [LICENSE](LICENSE) para obter mais detalhes.
+
+## Contato
+
+Para entrar em contato com o autor, envie um e-mail para [seu-email@example.com].
+
+---
+
+Lembre-se de personalizar as seções conforme necessário para o seu projeto, incluindo detalhes específicos da API, instruções de instalação e configuração, e informações de contato. Este README serve como um ponto de partida para comunicar efetivamente as informações sobre a sua API CRUD em Spring Boot.
+
 
 ## Entidades
 
@@ -315,3 +459,6 @@ Obtém etapas e imagens com base em uma pergunta.
 	}
 }
 ```
+
+
+
